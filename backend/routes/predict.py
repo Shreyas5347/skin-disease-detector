@@ -19,7 +19,9 @@ router = APIRouter()
 # ── Paths ────────────────────────────────────────────────────────
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR  = os.path.join(BASE_DIR, '..', 'model')
-MODEL_PATH = os.path.join(MODEL_DIR, 'skin_disease_model.keras')
+MODEL_H5   = os.path.join(MODEL_DIR, 'skin_disease_model.h5')
+MODEL_KERAS = os.path.join(MODEL_DIR, 'skin_disease_model.keras')
+MODEL_PATH = MODEL_H5 if os.path.exists(MODEL_H5) else MODEL_KERAS
 IDX_PATH   = os.path.join(MODEL_DIR, 'class_indices.json')
 
 # ── Load model once at startup ────────────────────────────────────
