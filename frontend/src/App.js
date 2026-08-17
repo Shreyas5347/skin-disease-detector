@@ -1,14 +1,15 @@
 import { useState, useRef } from 'react';
 import axios from 'axios';
 import './App.css';
+import DermalensMark from './components/DermalensMark';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
-const SEVERITY_STYLE = {
-  Critical: { bg: '#fff1f2', border: '#fda4af', badge: '#e11d48', text: '#9f1239' },
-  High:     { bg: '#fff7ed', border: '#fdba74', badge: '#ea580c', text: '#9a3412' },
-  Moderate: { bg: '#fefce8', border: '#fde047', badge: '#ca8a04', text: '#854d0e' },
-  Low:      { bg: '#f0fdf4', border: '#86efac', badge: '#16a34a', text: '#14532d' },
+const SEVERITY_CLASS = {
+  Critical: 'critical',
+  High:     'high',
+  Moderate: 'moderate',
+  Low:      'low',
 };
 
 export default function App() {
@@ -22,11 +23,11 @@ export default function App() {
 
   const handleFile = (file) => {
     if (!file) return;
-    if (!['image/jpeg','image/jpg','image/png'].includes(file.type)) {
+    if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
       setError('Please upload a JPG or PNG image only.'); return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      setError('File is too large. Maximum size is 10MB.'); return;
+      setError('File is too large. Maximum size is 10 MB.'); return;
     }
     setImage(file);
     setPreview(URL.createObjectURL(file));
@@ -48,153 +49,254 @@ export default function App() {
       });
       setResult(res.data);
     } catch (err) {
-      if (err.response)        setError(err.response.data?.detail || 'Server error. Please try again.');
-      else if (err.code === 'ECONNABORTED') setError('Request timed out. Server may be starting up — wait 30s and retry.');
-      else                     setError('Cannot connect to server. Make sure backend is running on port 8000.');
+      if (err.response)
+        setError(err.response.data?.detail || 'Server error. Please try again.');
+      else if (err.code === 'ECONNABORTED')
+        setError('Request timed out. Server may be starting up — wait 30 s and retry.');
+      else
+        setError('Cannot connect to server. Make sure the backend is running on port 8000.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleReset = () => {
-    setImage(null); setPreview(null);
-    setResult(null); setError(null);
+    setImage(null);
+    setPreview(null);
+    setResult(null);
+    setError(null);
     if (fileRef.current) fileRef.current.value = '';
   };
 
-  const sty = result ? (SEVERITY_STYLE[result.severity] || SEVERITY_STYLE.Low) : null;
+  const sevClass = result
+    ? (SEVERITY_CLASS[result.severity] || 'low')
+    : '';
 
   return (
     <div className="app">
+
       {/* ── Header ── */}
       <header className="header">
         <div className="header-inner">
+          {/* Logo */}
           <div className="logo">
-            <span className="logo-icon">🔬</span>
-            <div>
-              <div className="logo-title">SkinAI</div>
-              <div className="logo-sub">Skin Disease Detection System</div>
+            <DermalensMark width="42" height="42" style={{ display: 'block', flexShrink: 0 }} />
+            <div className="logo-text-wrap">
+              <div className="logo-title">Dermalens</div>
+              <div className="logo-sub">Screening Companion</div>
             </div>
           </div>
-          <div className="header-badge">Final Year Project · B.Tech IT · KKWIEER</div>
+
+          {/* Right side */}
+          <div className="header-right">
+            <div className="status-badge">
+              <span className="status-dot" />
+              Service online
+            </div>
+            <div className="header-divider" />
+            <span className="privacy-badge">Private by design</span>
+          </div>
         </div>
       </header>
 
+      {/* ── Main ── */}
       <main className="main">
-        {/* ── Disclaimer ── */}
-        <div className="disclaimer-banner">
-          ⚠️ <strong>Educational Use Only:</strong> This AI tool does not replace professional
-          medical advice. Always consult a certified dermatologist for diagnosis and treatment.
-        </div>
 
-        {/* ── Upload Card (hidden after result) ── */}
+        {/* ── Hero: split layout ── */}
         {!result && (
-          <div className="card upload-card">
-            <h2 className="card-title">Upload Skin Image</h2>
-            <p className="card-subtitle">
-              Upload a clear, close-up photo of the skin lesion for AI analysis across 7 disease types.
-            </p>
+          <section className="hero anim-rise">
 
-            {/* Drop zone */}
-            <div
-              className={`dropzone ${dragOver ? 'dragover' : ''} ${preview ? 'has-preview' : ''}`}
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]); }}
-              onClick={() => fileRef.current?.click()}
-            >
-              {preview ? (
-                <img src={preview} alt="Preview" className="preview-img" />
-              ) : (
-                <div className="dropzone-placeholder">
-                  <div className="dropzone-icon">📁</div>
-                  <div className="dropzone-text">Click to upload or drag & drop</div>
-                  <div className="dropzone-hint">JPG or PNG — max 10MB</div>
+            {/* Left: headline copy */}
+            <div className="hero-left">
+              <div className="hero-eyebrow">A calmer place to start</div>
+
+              <h1 className="hero-headline">
+                Look<br />
+                closer.<br />
+                <span className="accent-word">Feel<br />clearer.</span>
+              </h1>
+
+              <p className="hero-body">
+                Dermalens gives you a clear first look at a skin image,
+                with context for what to do next. It is a screening
+                companion, not a diagnosis.
+              </p>
+
+              <div className="hero-features">
+                <div className="hero-feature">
+                  <span className="feature-check">✓</span>
+                  No account needed
+                </div>
+                <div className="hero-feature">
+                  <span className="feature-check">✓</span>
+                  Built for a first look
+                </div>
+                <div className="hero-feature">
+                  <span className="feature-check">✓</span>
+                  7 skin conditions detected
+                </div>
+              </div>
+
+              <div className="hero-quote">
+                <blockquote>
+                  "A useful answer starts with an honest question."
+                </blockquote>
+                <cite>— The Dermalens approach</cite>
+              </div>
+            </div>
+
+            {/* Right: upload panel */}
+            <div className="hero-right anim-rise-1">
+
+              {/* Model status banner */}
+              <div className="model-banner">
+                <div className="model-banner-icon">ℹ️</div>
+                <div className="model-banner-text">
+                  <div className="model-banner-title">Model is ready</div>
+                  <div className="model-banner-desc">
+                    MobileNetV2 · HAM10000 · 10,015 training images
+                  </div>
+                </div>
+                <div className="model-banner-status">
+                  <span className="model-banner-dot" />
+                  Ready
+                </div>
+              </div>
+
+              {/* Drop zone */}
+              <div
+                id="upload-dropzone"
+                className={`upload-panel ${dragOver ? 'dragover' : ''} ${preview ? 'has-preview' : ''}`}
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragOver(false);
+                  handleFile(e.dataTransfer.files[0]);
+                }}
+                onClick={() => !preview && fileRef.current?.click()}
+              >
+                {preview ? (
+                  <img src={preview} alt="Uploaded skin image preview" className="preview-img" />
+                ) : (
+                  <>
+                    <div className="upload-icon-wrap anim-breathe">⬆</div>
+                    <div className="upload-title">Bring a skin image here</div>
+                    <p className="upload-desc">
+                      Drop an image or choose one from your device.
+                      A well-lit, close-up photo works best.
+                    </p>
+                    <button
+                      id="choose-image-btn"
+                      className="upload-cta"
+                      onClick={(e) => { e.stopPropagation(); fileRef.current?.click(); }}
+                    >
+                      Choose image
+                    </button>
+                  </>
+                )}
+              </div>
+
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/jpeg,image/png"
+                onChange={(e) => handleFile(e.target.files[0])}
+                style={{ display: 'none' }}
+                aria-label="Upload skin image"
+              />
+
+              {/* Error notice */}
+              {error && !result && (
+                <div className="notice-box error" role="alert">
+                  <span>⚠</span> {error}
                 </div>
               )}
-            </div>
 
-            <input
-              ref={fileRef} type="file"
-              accept="image/jpeg,image/png"
-              onChange={(e) => handleFile(e.target.files[0])}
-              style={{ display: 'none' }}
-            />
+              {/* Screen button */}
+              <div className="screen-btn-wrap">
+                <button
+                  id="screen-btn"
+                  className={`btn-screen ${image && !loading ? 'ready' : ''} ${loading ? 'loading' : ''}`}
+                  onClick={handleAnalyze}
+                  disabled={!image || loading}
+                  aria-label="Analyze uploaded skin image"
+                >
+                  {loading ? (
+                    <><span className="spinner" aria-hidden="true" /> Screening image…</>
+                  ) : (
+                    <>Screen this image →</>
+                  )}
+                </button>
 
-            {/* Tips */}
-            <div className="tips-box">
-              <strong>📷 Tips for best accuracy:</strong> Use a well-lit, in-focus, close-up
-              photo of the lesion. Avoid blurry or very dark images.
-            </div>
+                {preview && (
+                  <button
+                    id="clear-btn"
+                    className="btn-reset"
+                    onClick={handleReset}
+                    style={{ alignSelf: 'center' }}
+                  >
+                    ✕ Clear image
+                  </button>
+                )}
 
-            {/* Error */}
-            {error && <div className="error-box">❌ {error}</div>}
-
-            {/* Buttons */}
-            <div className="btn-row">
-              <button
-                className={`btn btn-primary ${(!image || loading) ? 'disabled' : ''}`}
-                onClick={handleAnalyze}
-                disabled={!image || loading}
-              >
-                {loading ? <><span className="spinner" /> Analyzing...</> : '🔬 Analyze Image'}
-              </button>
-              {image && (
-                <button className="btn btn-secondary" onClick={handleReset}>✕ Clear</button>
-              )}
-            </div>
-
-            {/* Loading message */}
-            {loading && (
-              <div className="loading-msg">
-                Running AI analysis — this may take 15–30 seconds on first run...
+                <div className="screen-disclaimer">
+                  By continuing, you confirm this image does not contain identifying information.
+                </div>
               </div>
-            )}
-          </div>
+            </div>
+          </section>
         )}
 
         {/* ── Results ── */}
         {result && (
-          <div className="results">
-            {/* Disease header card */}
-            <div className="card result-header" style={{ background: sty.bg, borderColor: sty.border }}>
+          <div className="results-section anim-rise">
+
+            <div className="results-header-row">
+              <div className="results-eyebrow">Screening result</div>
+              <button id="analyze-another-btn" className="btn-reset" onClick={handleReset}>
+                ← Screen another image
+              </button>
+            </div>
+
+            {/* Main result card */}
+            <div className={`result-card severity-${sevClass} anim-rise`}>
               <div className="result-top">
                 <div>
-                  <h2 className="disease-name">{result.predicted_disease}</h2>
-                  <span className="severity-badge" style={{ background: sty.badge }}>
-                    {result.severity} Severity
+                  <h2 className="result-name">{result.predicted_disease}</h2>
+                  <span className={`severity-pill ${sevClass}`}>
+                    {result.severity} severity
                   </span>
                 </div>
-                <div className="confidence-box">
-                  <div className="confidence-pct" style={{ color: sty.badge }}>
-                    {result.confidence}%
-                  </div>
+                <div className="confidence-block">
+                  <div className="confidence-num">{result.confidence}%</div>
                   <div className="confidence-label">Confidence</div>
                 </div>
               </div>
 
-              {/* Low confidence warning */}
               {result.confidence_note && (
-                <div className="confidence-warning">⚡ {result.confidence_note}</div>
+                <div className="notice-box warning" style={{ marginBottom: '1rem' }}>
+                  <span>⚡</span> {result.confidence_note}
+                </div>
               )}
 
-              <p className="disease-desc">{result.description}</p>
+              <p className="result-desc">{result.description}</p>
 
-              <div className="urgency-box" style={{ borderColor: sty.border, color: sty.text }}>
-                🚨 <strong>Action Required:</strong> {result.urgency}
+              <div className="urgency-bar">
+                🚨 <strong>Action required:</strong>&nbsp;{result.urgency}
               </div>
             </div>
 
-            {/* Do's and Don'ts */}
-            <div className="card-row">
-              <div className="card dos-card">
-                <h3 className="dos-title">✅ Do's</h3>
+            {/* Do's & Don'ts */}
+            <div className="cards-grid anim-rise-1">
+              <div className="info-card dos-card">
+                <div className="info-card-label">✅ Do's</div>
                 <ul className="advice-list">
                   {result.dos.map((d, i) => <li key={i}>{d}</li>)}
                 </ul>
               </div>
-              <div className="card donts-card">
-                <h3 className="donts-title">❌ Don'ts</h3>
+              <div className="info-card donts-card">
+                <div className="info-card-label">✗ Don'ts</div>
                 <ul className="advice-list">
                   {result.donts.map((d, i) => <li key={i}>{d}</li>)}
                 </ul>
@@ -202,33 +304,32 @@ export default function App() {
             </div>
 
             {/* Specialist + OTC */}
-            <div className="card-row">
-              <div className="card info-card">
-                <div className="info-label">👨‍⚕️ Recommended Specialist</div>
+            <div className="cards-grid anim-rise-2">
+              <div className="info-card spec-card">
+                <div className="info-card-label">👨‍⚕️ Recommended specialist</div>
                 <div className="info-value">{result.specialist}</div>
               </div>
-              <div className="card info-card">
-                <div className="info-label">💊 OTC / Self-care</div>
+              <div className="info-card otc-card">
+                <div className="info-card-label">💊 OTC / Self-care</div>
                 <div className="info-value">{result.otc_note}</div>
               </div>
             </div>
 
             {/* Top 3 predictions */}
-            <div className="card">
-              <h3 className="section-title">Top 3 Predictions</h3>
+            <div className="top3-card anim-rise-3">
+              <div className="section-label">Top 3 predictions</div>
               <div className="top3-list">
                 {result.top3_predictions.map((p, i) => (
                   <div key={i} className="top3-row">
                     <span className="top3-rank">{i + 1}</span>
-                    <span className="top3-name">{p.disease}</span>
-                    <div className="top3-bar-wrap">
-                      <div
-                        className="top3-bar"
-                        style={{
-                          width: `${Math.min(p.confidence, 100)}%`,
-                          background: i === 0 ? sty.badge : '#94a3b8'
-                        }}
-                      />
+                    <div className="top3-name-bar">
+                      <span className="top3-name">{p.disease}</span>
+                      <div className="top3-bar-track">
+                        <div
+                          className={`top3-bar-fill ${i === 0 ? 'top' : 'other'}`}
+                          style={{ width: `${Math.min(p.confidence, 100)}%` }}
+                        />
+                      </div>
                     </div>
                     <span className="top3-pct">{p.confidence}%</span>
                   </div>
@@ -236,56 +337,93 @@ export default function App() {
               </div>
             </div>
 
-            {/* Image + Analyze again */}
-            <div className="card result-footer">
+            {/* Result footer */}
+            <div className="result-footer-card">
               {preview && (
-                <img src={preview} alt="Uploaded" className="result-thumb" />
+                <img src={preview} alt="Your uploaded image" className="result-thumb" />
               )}
-              <div className="result-footer-info">
+              <div className="result-footer-meta">
                 <div className="result-filename">{image?.name}</div>
-                <div className="disclaimer-text">⚠️ {result.disclaimer}</div>
+                <div className="result-disclaimer">⚠ {result.disclaimer}</div>
               </div>
-              <button className="btn btn-primary" onClick={handleReset}>
-                + Analyze Another
+              <button
+                id="analyze-again-btn"
+                className="btn-analyze-again"
+                onClick={handleReset}
+              >
+                + Screen another
               </button>
             </div>
           </div>
         )}
 
-        {/* ── How it works ── */}
+        {/* ── How it works (shown on landing) ── */}
         {!result && !loading && (
-          <div className="card how-it-works">
-            <h3 className="section-title">How It Works</h3>
-            <div className="steps-row">
+          <section className="how-section anim-rise-2">
+            <div className="section-heading">
+              <div className="section-heading-eyebrow">
+                <span>◎</span> How it works
+              </div>
+            </div>
+
+            <div className="steps-grid">
               {[
-                { icon: '📤', step: '1', title: 'Upload Image', desc: 'Upload a clear photo of the skin lesion (JPG or PNG)' },
-                { icon: '🤖', step: '2', title: 'AI Analysis',  desc: 'MobileNetV2 model trained on 10,015 HAM10000 images analyzes it' },
-                { icon: '📋', step: '3', title: 'Get Results',  desc: 'Receive disease prediction, confidence score, and recommendations' },
+                {
+                  icon: '📤',
+                  step: '01',
+                  title: 'Upload image',
+                  desc: 'Upload a clear, well-lit close-up of the skin lesion (JPG or PNG, max 10 MB).',
+                },
+                {
+                  icon: '🤖',
+                  step: '02',
+                  title: 'AI analysis',
+                  desc: 'MobileNetV2 trained on 10,015 HAM10000 images screens the image in seconds.',
+                },
+                {
+                  icon: '📋',
+                  step: '03',
+                  title: 'Get context',
+                  desc: 'Receive a condition overview, confidence score, and what to do next.',
+                },
               ].map((s) => (
-                <div key={s.step} className="step-item">
+                <div key={s.step} className="step-card">
                   <div className="step-icon">{s.icon}</div>
-                  <div className="step-num">Step {s.step}</div>
+                  <div className="step-number">Step {s.step}</div>
                   <div className="step-title">{s.title}</div>
                   <div className="step-desc">{s.desc}</div>
                 </div>
               ))}
             </div>
 
-            <div className="disease-tags">
-              <div className="disease-tags-label">Detects 7 skin conditions:</div>
-              {['Melanoma','Nevus','Basal Cell Carcinoma','Actinic Keratosis',
-                'Benign Keratosis','Dermatofibroma','Vascular Lesion'].map(d => (
+            <div className="tags-row">
+              <span className="tags-label">Detects:</span>
+              {[
+                'Melanoma', 'Nevus', 'Basal Cell Carcinoma',
+                'Actinic Keratosis', 'Benign Keratosis',
+                'Dermatofibroma', 'Vascular Lesion',
+              ].map((d) => (
                 <span key={d} className="disease-tag">{d}</span>
               ))}
             </div>
-          </div>
+          </section>
         )}
       </main>
 
       {/* ── Footer ── */}
       <footer className="footer">
-        Final Year Project — B.Tech Information Technology · KKWIEER, Nashik · 2025–26
+        <div className="footer-inner">
+          <span className="footer-left">
+            Dermalens · A first look, held with care. &nbsp;·&nbsp;
+            Final Year Project — B.Tech IT · KKWIEER, Nashik · 2025–26
+          </span>
+          <span className="footer-right">
+            <span className="footer-dot" />
+            Model: MobileNetV2 · HAM10000
+          </span>
+        </div>
       </footer>
+
     </div>
   );
 }
